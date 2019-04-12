@@ -5,3 +5,7 @@
 .chat {
     height: 160px;
 }
+
+#p1-choises, #p2-choises {
+    height: 130px;
+}
