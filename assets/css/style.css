@@ -1,11 +1,17 @@
 .display {
-    height: 240px;
+    height: 280px;
 }
 
 .chat {
     height: 160px;
 }
 
-#p1-choises, #p2-choises {
+#p1-choises,
+#p2-choises {
     height: 130px;
+}
+
+#left-div,
+#right-div {
+    border-width: 5px !important;
 }

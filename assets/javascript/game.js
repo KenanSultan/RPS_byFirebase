@@ -1,5 +1,5 @@
 // Initialize Firebase
-$(document).ready(function() {
+$(document).ready(function () {
 
     var config = {
         apiKey: "AIzaSyCZxBqSVUwrLKe1Rko-6PAqUT38DKCFbBc",
@@ -8,64 +8,198 @@ $(document).ready(function() {
         projectId: "rsp-game-5dfd7"
     }
     firebase.initializeApp(config)
-    
+
     var database = firebase.database()
 
     if (localStorage.getItem("player")) {
         var player = localStorage.getItem("player")
 
-        database.ref("room/"+player).update({
-            name : ""
+        database.ref("room/" + player).update({
+            name: "",
+            wins: 0,
+            loses: 0,
+            choise: ""
         })
 
         localStorage.removeItem("player")
     }
-    
-    
-    
+
+
+
     database.ref("room").on("value", function (snap) {
-        if (!snap.val().player1.name) {
-            add_player1()
-        } else if (!snap.val().player2.name) {
-            add_player2()
+        if (snap.val().player1.name) {
+            $("#wins1").text(snap.val().player1.wins)
+            $("#loses1").text(snap.val().player1.loses)
+            $("#p1-name h3").text(snap.val().player1.name)
+            $("#p-1").hide()
+            $("#win-los1").removeClass("d-none")
         } else {
-            places_full()
+            $("#wins1").text(snap.val().player1.wins)
+            $("#loses1").text(snap.val().player1.loses)
+            $("#p1-name h3").text("")
+            $("#p-1").show()
+            $("#win-los1").addClass("d-none")
+            database.ref("room").update({
+                turn: 0
+            })
+            $("#left-div").removeClass("border border-warning")
+        }
+
+        if (snap.val().player2.name) {
+            $("#wins2").text(snap.val().player2.wins)
+            $("#loses2").text(snap.val().player2.loses)
+            $("#p2-name h3").text(snap.val().player2.name)
+            $("#p-2").hide()
+            $("#win-los2").removeClass("d-none")
+        } else {
+            $("#wins2").text(snap.val().player1.wins)
+            $("#loses2").text(snap.val().player1.loses)
+            $("#p2-name h3").text("")
+            $("#p-2").show()
+            $("#win-los2").addClass("d-none")
+            database.ref("room").update({
+                turn: 0
+            })
+            $("#right-div").removeClass("border border-warning")
+        }
+
+        if (snap.val().player1.name && snap.val().player2.name && !snap.val().turn) {
+            database.ref("room").update({
+                turn: 1
+            })
+        }
+
+        if (snap.val().turn == 1) {
+            $("#current1 h2").text("")
+            $("#current2 h2").text("")
+            $("#center-div h2").text("")
+            $("#left-div").addClass("border border-warning")
+            if (player == 1) {
+                $("#p1-choises").removeClass("d-none")
+            }
+
+        } else if (snap.val().turn == 2) {
+            $("#left-div").removeClass("border border-warning")
+            $("#right-div").addClass("border border-warning")
+            if (player == 1) {
+                $("#p1-choises").addClass("d-none")
+            } else if (player == 2) {
+                $("#p2-choises").removeClass("d-none")
+            }
+
+        } else if (snap.val().turn == 3) {
+            giveResult()
         }
     })
-    
-    function add_player1() {
-        $(".input-group").removeClass("d-none")
-        $("#name-btn").on("click", function() {
-            name = $("#name-input").val()
-            database.ref("room/player1").update({
-                name
-            })
-            localStorage.setItem("player", "player1")
-            $(".input-group").addClass("d-none")
-            $("#own-name").text(name)
-            $("#own-player").text(1)
-            $("#info-div").removeClass("d-none")
+
+    function giveResult() {
+        $("#right-div").removeClass("border border-warning")
+        $("#p2-choises").addClass("d-none")
+        database.ref("room").once("value", function (snap) {
+
+            var p1 = snap.val().player1.choise
+            var p2 = snap.val().player2.choise
+            var name1 = snap.val().player1.name
+            var name2 = snap.val().player2.name
+            var p1wins = snap.val().player1.wins + 1
+            var p1loses = snap.val().player1.loses + 1
+            var p2wins = snap.val().player2.wins + 1
+            var p2loses = snap.val().player2.loses + 1
+
+            $("#current1 h2").text(p1)
+            $("#current2 h2").text(p2)
+
+            if (p1 == "Rock" && p2 == "Scissors" || p1 == "Scissors" && p2 == "Paper" || p1 == "Paper" && p2 == "Rock") {
+                $("#center-div h2").text(name1 + " Wins!")
+                database.ref("room/player1").update({
+                    wins: p1wins,
+                    choise: ""
+                })
+                database.ref("room/player2").update({
+                    loses: p2loses,
+                    choise: ""
+                })
+            } else if (p2 == "Rock" && p1 == "Scissors" || p2 == "Scissors" && p1 == "Paper" || p2 == "Paper" && p1 == "Rock") {
+                $("#center-div h2").text(name2 + " Wins!")
+                database.ref("room/player1").update({
+                    loses: p1loses,
+                    choise: ""
+                })
+                database.ref("room/player2").update({
+                    wins: p2wins,
+                    choise: ""
+                })
+            } else if (p1=="Rock" || p1=="Paper" || p1=="Scissors") {
+                $("#center-div h2").text("Tie Game!")
+            }
+
+            setTimeout(function () {
+                database.ref('room').update({
+                    turn: 1
+                })
+            }, 3000)
+
         })
     }
-    
-    function add_player2() {
-        $(".input-group").removeClass("d-none")
-        $("#name-btn").on("click", function() {
+
+    $("#name-btn").on("click", function () {
+        database.ref("room").once("value", function (snap) {
             name = $("#name-input").val()
-            database.ref("room/player2").update({
-                name
-            })
-            localStorage.setItem("player", "player2")
-            $(".input-group").addClass("d-none")
-            $("#own-name").text(name)
-            $("#own-player").text(2)
-            $("#info-div").removeClass("d-none")
+            $("#name-input").val("")
+            if (!snap.val().player1.name) {
+                database.ref("room/player1").update({
+                    name
+                })
+                localStorage.setItem("player", "player1")
+                player = 1
+                $("#input-nm").addClass("d-none")
+                $("#own-name").text(name)
+                $("#own-player").text(1)
+                $("#info-div").removeClass("d-none")
+            } else if (!snap.val().player2.name) {
+                database.ref("room/player2").update({
+                    name
+                })
+                localStorage.setItem("player", "player2")
+                player = 2
+                $("#input-nm").addClass("d-none")
+                $("#own-name").text(name)
+                $("#own-player").text(2)
+                $("#info-div").removeClass("d-none")
+            }
+
         })
-    }
-    
-    function places_full() {
-    
-    }
+
+    })
+
+    $(".p1-ch").on("click", function () {
+        database.ref('room').update({
+            turn: 2
+        })
+        var choise = $(this).text()
+        if (player == 1) {
+            $("#current1 h2").text(choise)
+        }
+
+
+        database.ref("room/player1").update({
+            choise
+        })
+    })
+
+    $(".p2-ch").on("click", function () {
+        var choise = $(this).text()
+
+        database.ref("room/player2").update({
+            choise
+        })
+
+        database.ref('room').update({
+            turn: 3
+        })
+
+    })
+
 })
 
 
