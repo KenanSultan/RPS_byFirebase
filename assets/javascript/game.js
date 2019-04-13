@@ -142,6 +142,24 @@ $(document).ready(function () {
         })
     }
 
+    database.ref("room/messages").on("value", function(snap) {
+        var arr = snap.val()
+        $(".chat").empty()
+        for (i in arr) {
+            if (arr[i].p1){
+                let p = $("<p>").text(arr[i].p1)
+                p.addClass("text-left")
+                $(".chat").append(p)
+            } else if (arr[i].p2) {
+                let p = $("<p>").text(arr[i].p2)
+                p.addClass("text-primary text-right")
+                $(".chat").append(p)
+            }
+            
+
+        }
+    })
+
     $("#name-btn").on("click", function () {
         database.ref("room").once("value", function (snap) {
             name = $("#name-input").val()
@@ -198,6 +216,21 @@ $(document).ready(function () {
             turn: 3
         })
 
+    })
+
+    $("#send-msg").on("click", function() {
+        var msg = $("#msg").val()
+        $("#msg").val("")
+        if (player == 1) {
+            database.ref("room/messages").push({
+                p1 : msg
+            })
+        } else if (player == 2) {
+            database.ref("room/messages").push({
+                p2 : msg
+            })
+        }
+        
     })
 
 })
