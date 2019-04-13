@@ -34,6 +34,7 @@ $(document).ready(function () {
             $("#p-1").hide()
             $("#win-los1").removeClass("d-none")
         } else {
+
             $("#wins1").text(snap.val().player1.wins)
             $("#loses1").text(snap.val().player1.loses)
             $("#p1-name h3").text("")
@@ -64,6 +65,10 @@ $(document).ready(function () {
         }
 
         if (snap.val().player1.name && snap.val().player2.name && !snap.val().turn) {
+            database.ref("room").update({
+                messages: ""
+            })
+            $("#chat-div").removeClass("d-none")
             database.ref("room").update({
                 turn: 1
             })
@@ -148,11 +153,11 @@ $(document).ready(function () {
         for (i in arr) {
             if (arr[i].p1){
                 let p = $("<p>").text(arr[i].p1)
-                p.addClass("text-left")
+                p.addClass("text-left mb-0")
                 $(".chat").append(p)
             } else if (arr[i].p2) {
                 let p = $("<p>").text(arr[i].p2)
-                p.addClass("text-primary text-right")
+                p.addClass("text-primary text-right mb-0")
                 $(".chat").append(p)
             }
             
