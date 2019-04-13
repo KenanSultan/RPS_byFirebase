@@ -15,3 +15,9 @@
 #right-div {
     border-width: 5px !important;
 }
+
+#left-div,
+#right-div,
+#center-div {
+    min-height: 140px;
+}
