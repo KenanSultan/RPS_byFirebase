@@ -11,7 +11,8 @@ $(document).ready(function () {
 
     var database = firebase.database()
 
-    if (localStorage.getItem("player")) {
+    // Sehife guncellenende oyuncu silinsin
+/*    if (localStorage.getItem("player")) {
         var player = localStorage.getItem("player")
 
         database.ref("room/" + player).update({
@@ -22,8 +23,9 @@ $(document).ready(function () {
         })
 
         localStorage.removeItem("player")
-    }
+    }*/
 
+    // Player cixish eliyende de sehife guncellenende de oyuncu silinsin
     window.onbeforeunload = closingCode
     function closingCode() {
         if (localStorage.getItem("player")) {
@@ -34,23 +36,21 @@ $(document).ready(function () {
                 loses: 0,
                 choise: ""
             })
+            localStorage.removeItem("player")
         }
         return null;
     }
 
 
-
+    // oyuncularin melumatlarini display elemek ucun
     database.ref("room").on("value", function (snap) {
+        $("#wins1").text(snap.val().player1.wins)
+        $("#loses1").text(snap.val().player1.loses)
         if (snap.val().player1.name) {
-            $("#wins1").text(snap.val().player1.wins)
-            $("#loses1").text(snap.val().player1.loses)
             $("#p1-name h3").text(snap.val().player1.name)
             $("#p-1").hide()
             $("#win-los1").removeClass("d-none")
         } else {
-
-            $("#wins1").text(snap.val().player1.wins)
-            $("#loses1").text(snap.val().player1.loses)
             $("#p1-name h3").text("")
             $("#p-1").show()
             $("#win-los1").addClass("d-none")
@@ -60,15 +60,13 @@ $(document).ready(function () {
             $("#left-div").removeClass("border border-warning")
         }
 
+        $("#wins2").text(snap.val().player2.wins)
+        $("#loses2").text(snap.val().player2.loses)
         if (snap.val().player2.name) {
-            $("#wins2").text(snap.val().player2.wins)
-            $("#loses2").text(snap.val().player2.loses)
             $("#p2-name h3").text(snap.val().player2.name)
             $("#p-2").hide()
             $("#win-los2").removeClass("d-none")
         } else {
-            $("#wins2").text(snap.val().player1.wins)
-            $("#loses2").text(snap.val().player1.loses)
             $("#p2-name h3").text("")
             $("#p-2").show()
             $("#win-los2").addClass("d-none")
@@ -111,6 +109,7 @@ $(document).ready(function () {
         }
     })
 
+    // neticeni gosteren funcsiya
     function giveResult() {
         $("#right-div").removeClass("border border-warning")
         $("#p2-choises").addClass("d-none")
@@ -125,11 +124,10 @@ $(document).ready(function () {
             var p2wins = snap.val().player2.wins + 1
             var p2loses = snap.val().player2.loses + 1
 
-            $("#current1 h2").text(p1)
-            $("#current2 h2").text(p2)
-
             if (p1 == "Rock" && p2 == "Scissors" || p1 == "Scissors" && p2 == "Paper" || p1 == "Paper" && p2 == "Rock") {
                 $("#center-div h2").text(name1 + " Wins!")
+                $("#current1 h2").text(p1)
+                $("#current2 h2").text(p2)
                 database.ref("room/player1").update({
                     wins: p1wins,
                     choise: ""
@@ -137,9 +135,12 @@ $(document).ready(function () {
                 database.ref("room/player2").update({
                     loses: p2loses,
                     choise: ""
-                })
+                }) 
+                setTimeout(turn, 3000)
             } else if (p2 == "Rock" && p1 == "Scissors" || p2 == "Scissors" && p1 == "Paper" || p2 == "Paper" && p1 == "Rock") {
                 $("#center-div h2").text(name2 + " Wins!")
+                $("#current1 h2").text(p1)
+                $("#current2 h2").text(p2)
                 database.ref("room/player1").update({
                     loses: p1loses,
                     choise: ""
@@ -148,19 +149,23 @@ $(document).ready(function () {
                     wins: p2wins,
                     choise: ""
                 })
+                setTimeout(turn, 3000)
             } else if (p1 == "Rock" || p1 == "Paper" || p1 == "Scissors") {
                 $("#center-div h2").text("Tie Game!")
+                $("#current1 h2").text(p1)
+                $("#current2 h2").text(p2)
+                setTimeout(turn, 3000)
             }
 
-            setTimeout(function () {
+            function turn() {
                 database.ref('room').update({
                     turn: 1
                 })
-            }, 3000)
-
+            }
         })
     }
 
+    // Mesajlari ekrana yazdiran funksiya
     database.ref("room/messages").on("value", function (snap) {
         var arr = snap.val()
         $(".chat").empty()
@@ -174,8 +179,6 @@ $(document).ready(function () {
                 p.addClass("text-primary text-right mb-0")
                 $(".chat").append(p)
             }
-
-
         }
     })
 
