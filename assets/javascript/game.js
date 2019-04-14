@@ -1,6 +1,5 @@
-// Initialize Firebase
 $(document).ready(function () {
-
+    // Initialize Firebase
     var config = {
         apiKey: "AIzaSyCZxBqSVUwrLKe1Rko-6PAqUT38DKCFbBc",
         authDomain: "https://rsp-game-5dfd7.firebaseapp.com/",
@@ -11,24 +10,13 @@ $(document).ready(function () {
 
     var database = firebase.database()
 
-    // Sehife guncellenende oyuncu silinsin
-/*    if (localStorage.getItem("player")) {
-        var player = localStorage.getItem("player")
-
-        database.ref("room/" + player).update({
-            name: "",
-            wins: 0,
-            loses: 0,
-            choise: ""
-        })
-
-        localStorage.removeItem("player")
-    }*/
-
     // Player cixish eliyende de sehife guncellenende de oyuncu silinsin
     window.onbeforeunload = closingCode
     function closingCode() {
         if (localStorage.getItem("player")) {
+            database.ref("room").update({
+                turn: 0
+            })
             var player = localStorage.getItem("player")
             database.ref("room/" + player).update({
                 name: "",
@@ -41,72 +29,62 @@ $(document).ready(function () {
         return null;
     }
 
-
     // oyuncularin melumatlarini display elemek ucun
     database.ref("room").on("value", function (snap) {
+
         $("#wins1").text(snap.val().player1.wins)
         $("#loses1").text(snap.val().player1.loses)
+        $("#wins2").text(snap.val().player2.wins)
+        $("#loses2").text(snap.val().player2.loses)
+
         if (snap.val().player1.name) {
             $("#p1-name h3").text(snap.val().player1.name)
-            $("#p-1").hide()
+            $("#p1-waiting").hide()
             $("#win-los1").removeClass("d-none")
         } else {
             $("#p1-name h3").text("")
-            $("#p-1").show()
+            $("#p1-waiting").show()
             $("#win-los1").addClass("d-none")
-            database.ref("room").update({
-                turn: 0
-            })
-            $("#left-div").removeClass("border border-warning")
         }
 
-        $("#wins2").text(snap.val().player2.wins)
-        $("#loses2").text(snap.val().player2.loses)
         if (snap.val().player2.name) {
             $("#p2-name h3").text(snap.val().player2.name)
-            $("#p-2").hide()
+            $("#p2-waiting").hide()
             $("#win-los2").removeClass("d-none")
         } else {
             $("#p2-name h3").text("")
-            $("#p-2").show()
+            $("#p2-waiting").show()
             $("#win-los2").addClass("d-none")
-            database.ref("room").update({
-                turn: 0
-            })
-            $("#right-div").removeClass("border border-warning")
         }
-
-        if (snap.val().player1.name && snap.val().player2.name && !snap.val().turn) {
-            database.ref("room").update({
-                messages: ""
-            })
-            $("#chat-div").removeClass("d-none")
-            database.ref("room").update({
-                turn: 1
-            })
-        }
-
+     
         if (snap.val().turn == 1) {
+            $("#chat-div").removeClass("d-none")
             $("#current1 h2").text("")
             $("#current2 h2").text("")
             $("#center-div h2").text("")
             $("#left-div").addClass("border border-warning")
-            if (pl == 1) {
+            if (player_order == 1) {
                 $("#p1-choises").removeClass("d-none")
             }
 
         } else if (snap.val().turn == 2) {
             $("#left-div").removeClass("border border-warning")
             $("#right-div").addClass("border border-warning")
-            if (pl == 1) {
+            if (player_order == 1) {
                 $("#p1-choises").addClass("d-none")
-            } else if (pl == 2) {
+            } else if (player_order == 2) {
                 $("#p2-choises").removeClass("d-none")
             }
 
         } else if (snap.val().turn == 3) {
             giveResult()
-        }
+        } else if (snap.val().turn == 0) {
+            $("#left-div").removeClass("border border-warning")
+            $("#right-div").removeClass("border border-warning")
+
+            $("#p1-choises").addClass("d-none")
+            $("#p2-choises").addClass("d-none")
+        } 
     })
 
     // neticeni gosteren funcsiya
@@ -136,7 +114,7 @@ $(document).ready(function () {
                     loses: p2loses,
                     choise: ""
                 }) 
-                setTimeout(turn, 3000)
+                setTimeout(turn, 2000)
             } else if (p2 == "Rock" && p1 == "Scissors" || p2 == "Scissors" && p1 == "Paper" || p2 == "Paper" && p1 == "Rock") {
                 $("#center-div h2").text(name2 + " Wins!")
                 $("#current1 h2").text(p1)
@@ -149,12 +127,12 @@ $(document).ready(function () {
                     wins: p2wins,
                     choise: ""
                 })
-                setTimeout(turn, 3000)
+                setTimeout(turn, 2000)
             } else if (p1 == "Rock" || p1 == "Paper" || p1 == "Scissors") {
                 $("#center-div h2").text("Tie Game!")
                 $("#current1 h2").text(p1)
                 $("#current2 h2").text(p2)
-                setTimeout(turn, 3000)
+                setTimeout(turn, 2000)
             }
 
             function turn() {
@@ -169,64 +147,79 @@ $(document).ready(function () {
     database.ref("room/messages").on("value", function (snap) {
         var arr = snap.val()
         $(".chat").empty()
+        var height = 0
         for (i in arr) {
             if (arr[i].p1) {
                 let p = $("<p>").text(arr[i].p1)
                 p.addClass("text-left mb-0")
                 $(".chat").append(p)
+                height += 30
             } else if (arr[i].p2) {
                 let p = $("<p>").text(arr[i].p2)
                 p.addClass("text-primary text-right mb-0")
                 $(".chat").append(p)
+                height += 30
             }
+            $(".chat").scrollTop(height)
         }
     })
 
+    // Oyuna girish elemekcin ad daxil etmek
     $("#name-btn").on("click", function () {
         database.ref("room").once("value", function (snap) {
             name = $("#name-input").val()
             $("#name-input").val("")
             if (!snap.val().player1.name) {
+                player_order = 1
                 database.ref("room/player1").update({
                     name
                 })
                 localStorage.setItem("player", "player1")
-                pl = 1
                 $("#input-nm").addClass("d-none")
                 $("#own-name").text(name)
                 $("#own-player").text(1)
                 $("#info-div").removeClass("d-none")
+                if (snap.val().player2.name) {
+                    database.ref("room").update({
+                        turn: 1,
+                        messages: ""
+                    })
+                }
             } else if (!snap.val().player2.name) {
+                player_order = 2
                 database.ref("room/player2").update({
                     name
                 })
+                database.ref("room").update({
+                    turn: 1,
+                    messages: ""
+                })
                 localStorage.setItem("player", "player2")
-                pl = 2
                 $("#input-nm").addClass("d-none")
                 $("#own-name").text(name)
                 $("#own-player").text(2)
                 $("#info-div").removeClass("d-none")
             }
-
         })
-
     })
 
+    // Player1'in oyunda secimi
     $(".p1-ch").on("click", function () {
         database.ref('room').update({
             turn: 2
         })
+
         var choise = $(this).text()
-        if (pl == 1) {
+        if (player_order == 1) {
             $("#current1 h2").text(choise)
         }
-
 
         database.ref("room/player1").update({
             choise
         })
     })
 
+    // Player2'nin oyunda secimi
     $(".p2-ch").on("click", function () {
         var choise = $(this).text()
 
@@ -240,117 +233,19 @@ $(document).ready(function () {
 
     })
 
-    $("#send-msg").on("click", function () {
+    // Mesaj yazmaq ucun
+    $("form").on("submit", function (event) {
+        event.preventDefault()
         var msg = $("#msg").val()
         $("#msg").val("")
-        if (pl == 1) {
+        if (player_order == 1) {
             database.ref("room/messages").push({
                 p1: msg
             })
-        } else if (pl == 2) {
+        } else if (player_order == 2) {
             database.ref("room/messages").push({
                 p2: msg
             })
         }
-
     })
-
 })
-
-
-/*class Player {
-    constructor(name) {
-        this.name = name
-        this.wins = 0
-        this.loses = 0
-        this.choise = ""
-    }
-
-    change_wins() {
-        this.wins += 1
-    }
-
-    change_loses() {
-        this.loses += 1
-    }
-
-    set_choise(choise) {
-        this.choise = choise
-    }
-}
-
-database.ref().on("value", function (snap) {
-    if (snap.val().step==0) {
-        create_player1()
-    } else if (snap.val().step==1) {
-        create_player2()
-    } else if (snap.val().step==2) {
-        player1_turn()
-    } else if (snap.val().step==3) {
-        player2_turn()
-    }
-
-    function create_player1() {
-        $("#name-btn").on("click", function () {
-            name = $("#name-input").val()
-            player = new Player(name)
-            $("#head-div").empty()
-            database.ref("/players/0").set({
-                name: player.name,
-                choises : "",
-                wins: 0,
-                loses: 0
-            })
-            $("#p-1").addClass("d-none")
-            $("#p1-name").removeClass("d-none")
-            $("#p1-name h3").text(snap.val().player.name)
-            $("#win-los").removeClass("d-none")
-            $("#wins1").text(snap.val().player.wins)
-            $("#loses1").text(snap.val().player.loses)
-        })
-    }
-
-    function create_player2() {
-
-    }
-
-    function player1_turn() {
-
-    }
-
-    function player2_turn() {
-
-    }
-})
-
-    if (localStorage.getItem("name") && snap.val()) {
-        local_name = JSON.parse(localStorage.getItem("name"))
-        if (snap.val()[local_name] && initial === true) {
-            database.ref().child("/" + local_name + "/").remove()
-        }
-    }
-
-    console.log(snap.val())
-
-    if (!snap.val()) {
-        new_player()
-    } else if (Object.keys(snap.val()).length == 1) {
-        be_second()
-    } else if (Object.keys(snap.val()).length == 2) {
-        no_place()
-    }
-
-    function new_player() {
-        $("#name-btn").on("click", function () {
-            name = $("#name-input").val()
-            player = new Player(name)
-            $("#head-div").empty()
-            database.ref("/" + player.name + "/").set(
-                player
-            )
-            console.log("test"+snap.val())
-            localStorage.setItem("name", JSON.stringify(player.name))
-
-            $("#p-1").addClass("d-none")
-        })
-    }*/
