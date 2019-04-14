@@ -24,6 +24,20 @@ $(document).ready(function () {
         localStorage.removeItem("player")
     }
 
+    window.onbeforeunload = closingCode
+    function closingCode() {
+        if (localStorage.getItem("player")) {
+            var player = localStorage.getItem("player")
+            database.ref("room/" + player).update({
+                name: "",
+                wins: 0,
+                loses: 0,
+                choise: ""
+            })
+        }
+        return null;
+    }
+
 
 
     database.ref("room").on("value", function (snap) {
@@ -79,16 +93,16 @@ $(document).ready(function () {
             $("#current2 h2").text("")
             $("#center-div h2").text("")
             $("#left-div").addClass("border border-warning")
-            if (player == 1) {
+            if (pl == 1) {
                 $("#p1-choises").removeClass("d-none")
             }
 
         } else if (snap.val().turn == 2) {
             $("#left-div").removeClass("border border-warning")
             $("#right-div").addClass("border border-warning")
-            if (player == 1) {
+            if (pl == 1) {
                 $("#p1-choises").addClass("d-none")
-            } else if (player == 2) {
+            } else if (pl == 2) {
                 $("#p2-choises").removeClass("d-none")
             }
 
@@ -134,7 +148,7 @@ $(document).ready(function () {
                     wins: p2wins,
                     choise: ""
                 })
-            } else if (p1=="Rock" || p1=="Paper" || p1=="Scissors") {
+            } else if (p1 == "Rock" || p1 == "Paper" || p1 == "Scissors") {
                 $("#center-div h2").text("Tie Game!")
             }
 
@@ -147,11 +161,11 @@ $(document).ready(function () {
         })
     }
 
-    database.ref("room/messages").on("value", function(snap) {
+    database.ref("room/messages").on("value", function (snap) {
         var arr = snap.val()
         $(".chat").empty()
         for (i in arr) {
-            if (arr[i].p1){
+            if (arr[i].p1) {
                 let p = $("<p>").text(arr[i].p1)
                 p.addClass("text-left mb-0")
                 $(".chat").append(p)
@@ -160,7 +174,7 @@ $(document).ready(function () {
                 p.addClass("text-primary text-right mb-0")
                 $(".chat").append(p)
             }
-            
+
 
         }
     })
@@ -174,7 +188,7 @@ $(document).ready(function () {
                     name
                 })
                 localStorage.setItem("player", "player1")
-                player = 1
+                pl = 1
                 $("#input-nm").addClass("d-none")
                 $("#own-name").text(name)
                 $("#own-player").text(1)
@@ -184,7 +198,7 @@ $(document).ready(function () {
                     name
                 })
                 localStorage.setItem("player", "player2")
-                player = 2
+                pl = 2
                 $("#input-nm").addClass("d-none")
                 $("#own-name").text(name)
                 $("#own-player").text(2)
@@ -200,7 +214,7 @@ $(document).ready(function () {
             turn: 2
         })
         var choise = $(this).text()
-        if (player == 1) {
+        if (pl == 1) {
             $("#current1 h2").text(choise)
         }
 
@@ -223,19 +237,19 @@ $(document).ready(function () {
 
     })
 
-    $("#send-msg").on("click", function() {
+    $("#send-msg").on("click", function () {
         var msg = $("#msg").val()
         $("#msg").val("")
-        if (player == 1) {
+        if (pl == 1) {
             database.ref("room/messages").push({
-                p1 : msg
+                p1: msg
             })
-        } else if (player == 2) {
+        } else if (pl == 2) {
             database.ref("room/messages").push({
-                p2 : msg
+                p2: msg
             })
         }
-        
+
     })
 
 })
