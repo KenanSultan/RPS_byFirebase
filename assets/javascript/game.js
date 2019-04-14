@@ -65,6 +65,9 @@ $(document).ready(function () {
             $("#left-div").addClass("border border-warning")
             if (player_order == 1) {
                 $("#p1-choises").removeClass("d-none")
+                $("#top-info").text("It is your turn!")
+            } else if (player_order == 2) {
+                $("#top-info").text("Waiting for " + snap.val().player1.name + " to choose.")
             }
 
         } else if (snap.val().turn == 2) {
@@ -72,13 +75,17 @@ $(document).ready(function () {
             $("#right-div").addClass("border border-warning")
             if (player_order == 1) {
                 $("#p1-choises").addClass("d-none")
+                $("#top-info").text("Waiting for " + snap.val().player2.name + " to choose.")
             } else if (player_order == 2) {
                 $("#p2-choises").removeClass("d-none")
+                $("#top-info").text("It is your turn!")
             }
 
         } else if (snap.val().turn == 3) {
+            $("#top-info").text("")
             giveResult()
         } else if (snap.val().turn == 0) {
+            $("#top-info").text("")
             $("#left-div").removeClass("border border-warning")
             $("#right-div").removeClass("border border-warning")
 
