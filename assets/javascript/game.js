@@ -28,9 +28,15 @@ $(document).ready(function () {
         }
         return null;
     }
-
+    var player_order = 0
     // oyuncularin melumatlarini display elemek ucun
     database.ref("room").on("value", function (snap) {
+        // For third user
+        if (snap.val().player1.name && snap.val().player2.name) {
+            $("#input-nm").addClass("d-none")
+        } else if (player_order == 0) {
+            $("#input-nm").removeClass("d-none")
+        }
 
         $("#wins1").text(snap.val().player1.wins)
         $("#loses1").text(snap.val().player1.loses)
@@ -56,9 +62,12 @@ $(document).ready(function () {
             $("#p2-waiting").show()
             $("#win-los2").addClass("d-none")
         }
-     
+
         if (snap.val().turn == 1) {
-            $("#chat-div").removeClass("d-none")
+            // For message privacy
+            if (player_order == 1 || player_order == 2) {
+                $("#chat-div").removeClass("d-none")
+            }
             $("#current1 h2").text("")
             $("#current2 h2").text("")
             $("#center-div h2").text("")
@@ -91,7 +100,7 @@ $(document).ready(function () {
 
             $("#p1-choises").addClass("d-none")
             $("#p2-choises").addClass("d-none")
-        } 
+        }
     })
 
     // neticeni gosteren funcsiya
@@ -120,7 +129,7 @@ $(document).ready(function () {
                 database.ref("room/player2").update({
                     loses: p2loses,
                     choise: ""
-                }) 
+                })
                 setTimeout(turn, 2000)
             } else if (p2 == "Rock" && p1 == "Scissors" || p2 == "Scissors" && p1 == "Paper" || p2 == "Paper" && p1 == "Rock") {
                 $("#center-div h2").text(name2 + " Wins!")
